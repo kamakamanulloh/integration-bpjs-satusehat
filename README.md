@@ -1,68 +1,139 @@
-# CodeIgniter 4 Application Starter
+🚀 integration-bpjs-satusehat
 
-## What is CodeIgniter?
+integration-bpjs-satusehat adalah sebuah helper package untuk mempermudah developer CodeIgniter 4 dalam melakukan integrasi berbagai layanan BPJS & Kemenkes seperti:
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+🔐 Antrean FKTP (Mobile JKN) – JWT Auth
 
-This repository holds a composer-installable app starter.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+🏥 BPJS Antrol
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+💊 BPJS PCare
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+🔎 BPJS iCare
 
-## Installation & updates
+🏥 SATUSEHAT (FHIR R4)
 
-`composer create-project codeigniter4/appstarter` then `composer update` whenever
-there is a new release of the framework.
+📦 KFA v2 Kemkes
 
-When updating, check the release notes to see if there are any changes you might need to apply
-to your `app` folder. The affected files can be copied or merged from
-`vendor/codeigniter4/framework/app`.
+Helper ini menyederhanakan proses generate signature, timestamp, AES-256 decryption, LZ-string decompress, dan pembuatan token menggunakan JWT untuk layanan antrean.
 
-## Setup
+Package ini didesain agar ringan, reusable, dan mudah dipasang di berbagai project CodeIgniter 4.
 
-Copy `env` to `.env` and tailor for your app, specifically the baseURL
-and any database settings.
+✨ FEATURE
 
-## Important Change with index.php
+Custom base URL setiap layanan
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+Generate Signature (HMAC-SHA256 BPJS)
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+Generate Timestamp BPJS otomatis
 
-**Please** read the user guide for a better explanation of how CI4 works!
+Auto Encrypt / Decrypt (AES-256-CBC)
 
-## Repository Management
+Auto-decompress (LZ-String) bila tersedia
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
+Auto-cache token SATUSEHAT
 
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
+Antrean FKTP JWT Authentication (HS256)
 
-## Server Requirements
+Wrapper GET/POST/PUT/DELETE untuk:
+✔ Antrol
+✔ PCare
+✔ iCare
+✔ SATUSEHAT
+✔ KFA
 
-PHP version 8.1 or higher is required, with the following extensions installed:
+📦 Installation
 
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
+Composer
+composer config repositories.integration-bpjs-satusehat git https://github.com/kamakamanulloh/integration-bpjs-satusehat.git
+composer require kamakamanulloh/integration-bpjs-satusehat:dev-main
 
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - If you are still using PHP 7.4 or 8.0, you should upgrade immediately.
-> - The end of life date for PHP 8.1 will be December 31, 2025.
+Tambahkan dependency JWT:
 
-Additionally, make sure that the following extensions are enabled in your PHP:
+composer require firebase/php-jwt
 
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+
+Setup Helper (CodeIgniter 4)
+
+Tambahkan helper ke autoload:
+
+app/Config/Autoload.php
+
+public $helpers = ['integration_helper'];
+
+
+(Optional) Jalankan migration + seeder:
+
+php spark migrate
+php spark db:seed IntegrationConfigSeeder
+
+🔧 Environment Configuration
+
+Tambahkan ke .env:
+
+# ========= Antrean FKTP JWT =========
+ANTREAN_FKTP_USERNAME = "user_akses_bpjs"
+ANTREAN_FKTP_PASSWORD = "password_akses_bpjs"
+ANTREAN_FKTP_JWT_SECRET = "secret-random-panjang"
+ANTREAN_FKTP_TTL = 3600
+
+# ========= BPJS Antrol =========
+BPJS_ANTROL_SECRET_KEY = "secret_key_antrol"
+BPJS_ANTROL_SERVICE_NAME = "antrean"
+
+# ========= PCare / Icare =========
+BPJS_PCARE_SERVICE_NAME = "pcare"
+
+# ========= SATUSEHAT =========
+app.baseURL = "http://localhost:8080/"
+
+🚀 Usage
+✔ Antrean FKTP – JWT Auth
+
+Tanpa controller!
+app/Config/Routes.php:
+
+$routes->get('auth', function () {
+    return antrean_fktp_handle_auth(service('request'), service('response'));
+});
+
+
+Test:
+
+curl -X GET http://localhost:8080/auth \
+  -H "x-username: user_akses_bpjs" \
+  -H "x-password: password_akses_bpjs"
+
+✔ BPJS Antrol
+$res = bpjs_antrol_get("ref/poli/tanggal/2025-12-04");
+print_r($res);
+
+
+POST:
+
+bpjs_antrol_post("antrean/add", [
+    "nomorkartu" => "00012345678",
+    "nik"        => "3212345678987654",
+    "kodepoli"   => "ANA"
+]);
+
+✔ PCare
+pcare_get("peserta/00012345678/nik");
+
+
+POST:
+
+pcare_post("pendaftaran", $payload);
+
+✔ iCare
+icare_validate_pcare("2200009338321");
+
+✔ SATUSEHAT
+satu_patient_by_nik("3201234567890001");
+
+✔ KFA v2
+kfa_get("kfa-v2/products/all?page=1&size=50");
+
+📞 Contact
+
+Developed by Kania IT Solution
+📱 WA: 089682428590
