@@ -1,0 +1,5 @@
+/writable/*
+/env
+/.env
+/vendor/
+/public/uploads/
