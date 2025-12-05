@@ -44,8 +44,8 @@ Wrapper GET/POST/PUT/DELETE untuk:
 📦 Installation
 
 Composer
-composer config repositories.integration-bpjs-satusehat git https://github.com/kamakamanulloh/integration-bpjs-satusehat.git
-composer require kamakamanulloh/integration-bpjs-satusehat:dev-main
+composer require kamakamanulloh/integration-bpjs-satusehat
+
 
 Tambahkan dependency JWT:
 
